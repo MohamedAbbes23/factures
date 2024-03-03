@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liste des Factures</title>
+<!-- Include Bootstrap CSS -->
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<!-- Search input field -->
+<div class="container">
+    <h2 class="text-center">Recherche des Factures</h2>
+    <div class="form-group">
+        <input type="text" class="form-control" id="searchInput" placeholder="Entrez le libellé de l'item">
+    </div>
+</div>
+
+<!-- Table to display search results -->
+<div class="container">
+    <h2 class="text-center">Résultats de la Recherche</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Facture ID</th>
+                <th>Facture Date</th>
+                <th>Client Nom</th>
+                <th>Fournisseur Nom</th>
+                <th>Montant TTC</th>
+            </tr>
+        </thead>
+        <tbody id="invoice-table-body">
+            <!-- Invoice data will be dynamically added here -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal to display item details -->
+<div class="modal fade" id="itemDetailsModal" tabindex="-1" aria-labelledby="itemDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="itemDetailsModalLabel">Détails de l'Item</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Item Libellé</th>
+                            <th>Unité d’Item</th>
+                            <th>Quantité d’item</th>
+                            <th>Prix d’item</th>
+                            <th>Taxe d’item</th>
+                            <th>Montant d’item TTC</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemDetailsTableBody">
+                        <!-- Item details will be dynamically added here -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- Button for printing -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="printButton">Imprimer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Fetch data from API and display in table
+    fetch('https://elhoussam.github.io/invoicesapi/db.json')
+        .then(response => response.json())
+        .then(data => {
+            const invoiceTableBody = document.getElementById("invoice-table-body");
+            const searchInput = document.getElementById("searchInput");
+            const itemDetailsModal = document.getElementById("itemDetailsModal");
+            let filteredInvoices = []; // Variable to store filtered invoices
+
+            // Function to filter invoices based on search term
+            function filterInvoices(searchTerm) {
+                filteredInvoices = data.filter(invoice => invoice.InvoiceItems.some(item => item.ItemLibelle.toLowerCase().includes(searchTerm.toLowerCase())));
+                displayInvoices(filteredInvoices);
+            }
+
+            // Function to display filtered invoices
+            function displayInvoices(invoices) {
+                invoiceTableBody.innerHTML = "";
+                invoices.forEach(invoice => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${invoice.InvoiceID}</td>
+                        <td>${invoice.InvoiceDate}</td>
+                        <td>${invoice.ClientName}</td>
+                        <td>${invoice.SupplierName}</td>
+                        <td>${calculateMontantTTC(invoice.InvoiceItems)}</td>
+                    `;
+                    if (filteredInvoices.length > 0) {
+                        row.classList.add('clickable-row');
+                    }
+                    invoiceTableBody.appendChild(row);
+                });
+            }
+
+            // Event listener for search input
+            searchInput.addEventListener("input", function() {
+                const searchTerm = this.value.trim();
+                if (searchTerm === "") {
+                    filteredInvoices = [];
+                    displayInvoices(data);
+                    return;
+                }
+                filterInvoices(searchTerm);
+            });
+
+            // Function to calculate Montant TTC
+            function calculateMontantTTC(items) {
+                let totalHT = 0;
+                let totalTax = 0;
+                items.forEach(item => {
+                    totalHT += item.ItemPrice * item.ItemQuantity;
+                    totalTax += item.ItemTax * item.ItemQuantity;
+                });
+                const montantTTC = totalHT + totalTax;
+                return montantTTC.toFixed(2);
+            }
+
+            // Function to show item details modal
+            function showItemDetails(invoice) {
+                const itemDetailsTableBody = document.getElementById("itemDetailsTableBody");
+                itemDetailsTableBody.innerHTML = "";
+                invoice.InvoiceItems.forEach(item => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${item.ItemLibelle}</td>
+                        <td>${item.ItemUnit}</td>
+                        <td>${item.ItemQuantity}</td>
+                        <td>${item.ItemPrice}</td>
+                        <td>${item.ItemTax}</td>
+                        <td>${(item.ItemPrice * item.ItemQuantity + item.ItemTax).toFixed(2)}</td>
+                    `;
+                    itemDetailsTableBody.appendChild(row);
+                });
+                $(itemDetailsModal).modal('show');
+            }
+
+            // Event listener for clicks on invoice rows
+            invoiceTableBody.addEventListener('click', function(event) {
+                const target = event.target.closest('tr');
+                if (!target.classList.contains('clickable-row')) return;
+                const index = Array.from(target.parentNode.children).indexOf(target);
+                const invoice = filteredInvoices[index];
+                showItemDetails(invoice);
+            });
+
+            // Display all invoices initially
+            displayInvoices(data);
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+        });
+
+    // Event listener for print button
+    document.getElementById("printButton").addEventListener("click", function() {
+        // Here you can write the code to print the invoice
+        // You can access the filled information and use it to generate a PDF
+    });
+</script>
+
+<!-- Include jQuery and Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>
