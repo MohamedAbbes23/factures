@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Facture</title>
+<!-- Include Bootstrap CSS -->
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    hr {
+        border-top: 1px solid black;
+    }
+</style>
+</head>
+<body>
+<!-- Bill Template -->
+<div class="container">
+    <div class="row">
+        <div class="col-sm-6">
+            <h2 class="text-center">Facture No <span id="bill-number"></span></h2>
+        </div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col-sm-6">
+            <h3>Informations Fournisseur:</h3>
+            <p><strong>Nom du fournisseur:</strong> <span id="fournisseur-name"></span></p>
+        </div>
+        <div class="col-sm-6">
+            <h3>Informations Client:</h3>
+            <p><strong>Nom du client:</strong> <span id="client-name"></span></p>
+        </div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>LIBELLÉ</th>
+                        <th>QUANTITÉ</th>
+                        <th>PRIX</th>
+                        <th>HT</th>
+                        <th>TTC</th>
+                    </tr>
+                </thead>
+                <tbody id="long-table-body">
+                    <!-- Rows will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <td>TOTAL</td>
+                        <td><span id="total-ht"></span></td>
+                    </tr>
+                    <tr>
+                        <td>TVA</td>
+                        <td><span id="tva"></span></td>
+                    </tr>
+                    <tr>
+                        <td>Total TTC</td>
+                        <td><span id="total-ttc"></span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col-sm-12">
+            <div id="signature-space" class="text-right">
+                Signature: ____________________
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Function to fill bill information
+    function fillBillInfo() {
+        // Fill bill number, date, fournisseur, and client information dynamically
+        // Example data
+        document.getElementById("bill-number").innerText = "";
+        document.getElementById("fournisseur-name").innerText = "Nom du fournisseur";
+        document.getElementById("client-name").innerText = "Nom du client";
+
+        // Example data for the long table
+        const longTableData = [
+            // No example data provided
+        ];
+        const longTableBody = document.getElementById("long-table-body");
+        longTableBody.innerHTML = ""; // Clear previous rows
+        longTableData.forEach(row => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td>${row.n}</td>
+                            <td>${row.libelle}</td>
+                            <td>${row.quantite}</td>
+                            <td>${row.prix}</td>
+                            <td>${row.ht}</td>
+                            <td>${row.ttc}</td>`;
+            longTableBody.appendChild(tr);
+        });
+
+        // Example data for the small table
+        const totalHT = longTableData.reduce((acc, curr) => acc + curr.ht, 0);
+        const tva = totalHT * 0.2; // Example 20% TVA
+        const totalTTC = totalHT + tva;
+        document.getElementById("total-ht").innerText = "";
+        document.getElementById("tva").innerText = "";
+        document.getElementById("total-ttc").innerText = "";
+    }
+
+    // Fill bill information when the page loads
+    fillBillInfo();
+
+    // Print PDF when the page is loaded
+    window.onload = function() {
+        window.print();
+    };
+</script>
+
+</body>
+</html>
